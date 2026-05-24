@@ -1,4 +1,4 @@
-# Cloud Storage Client
+# JCloudStorage
 
 Universal cloud storage abstraction library for Java. Provides a simple, unified API for reading files from AWS S3, Azure Blob Storage, Google Cloud Storage, Google Drive, Dropbox, and OneDrive.
 
@@ -19,7 +19,7 @@ Universal cloud storage abstraction library for Java. Provides a simple, unified
 ```xml
 <dependency>
     <groupId>org.flossware</groupId>
-    <artifactId>cloud-storage-client</artifactId>
+    <artifactId>jcloudstorage</artifactId>
     <version>1.0</version>
 </dependency>
 
@@ -104,8 +104,8 @@ This project uses **X.Y semantic versioning** (e.g., 1.0, 1.1, 2.0). Versions ar
 ## Building from Source
 
 ```bash
-git clone https://github.com/FlossWare/cloud-storage-client.git
-cd cloud-storage-client
+git clone https://github.com/FlossWare/jcloudstorage.git
+cd jcloudstorage
 mvn clean install
 ```
 

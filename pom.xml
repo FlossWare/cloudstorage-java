@@ -5,11 +5,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.flossware</groupId>
-    <artifactId>cloud-storage-client</artifactId>
+    <artifactId>jcloudstorage</artifactId>
     <version>1.0</version>
     <packaging>jar</packaging>
 
-    <name>Cloud Storage Client</name>
+    <name>JCloudStorage</name>
     <description>Universal cloud storage abstraction library supporting AWS S3, Azure Blob Storage, Google Cloud Storage, Google Drive, Dropbox, and OneDrive</description>
 
     <properties>
@@ -21,9 +21,9 @@
     </properties>
 
     <scm>
-        <connection>scm:git:https://github.com/FlossWare/cloud-storage-client.git</connection>
-        <developerConnection>scm:git:https://github.com/FlossWare/cloud-storage-client.git</developerConnection>
-        <url>https://github.com/FlossWare/cloud-storage-client</url>
+        <connection>scm:git:https://github.com/FlossWare/jcloudstorage.git</connection>
+        <developerConnection>scm:git:https://github.com/FlossWare/jcloudstorage.git</developerConnection>
+        <url>https://github.com/FlossWare/jcloudstorage</url>
     </scm>
 
     <organization>
@@ -43,7 +43,7 @@
 
     <issueManagement>
         <system>GitHub</system>
-        <url>https://github.com/FlossWare/cloud-storage-client/issues</url>
+        <url>https://github.com/FlossWare/jcloudstorage/issues</url>
     </issueManagement>
 
     <distributionManagement>
