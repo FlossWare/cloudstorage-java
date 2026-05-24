@@ -86,6 +86,21 @@ public interface CloudStorageClient extends AutoCloseable {
 }
 ```
 
+## Versioning and Releases
+
+This project uses **X.Y semantic versioning** (e.g., 1.0, 1.1, 2.0). Versions are automatically incremented on commits to the main branch and published to packagecloud.io.
+
+### Maven Repository
+
+```xml
+<repositories>
+    <repository>
+        <id>packagecloud-flossware</id>
+        <url>https://packagecloud.io/flossware/java/maven2</url>
+    </repository>
+</repositories>
+```
+
 ## Building from Source
 
 ```bash
