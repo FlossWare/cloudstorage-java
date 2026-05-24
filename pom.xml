@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.flossware</groupId>
+    <artifactId>cloud-storage-client</artifactId>
+    <version>1.0</version>
+    <packaging>jar</packaging>
+
+    <name>Cloud Storage Client</name>
+    <description>Universal cloud storage abstraction library supporting AWS S3, Azure Blob Storage, Google Cloud Storage, Google Drive, Dropbox, and OneDrive</description>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+        <junit.version>6.1.0</junit.version>
+    </properties>
+
+    <scm>
+        <connection>scm:git:https://github.com/FlossWare/cloud-storage-client.git</connection>
+        <developerConnection>scm:git:https://github.com/FlossWare/cloud-storage-client.git</developerConnection>
+        <url>https://github.com/FlossWare/cloud-storage-client</url>
+    </scm>
+
+    <organization>
+        <name>FlossWare</name>
+        <url>https://github.com/FlossWare</url>
+    </organization>
+
+    <developers>
+        <developer>
+            <id>sfloess</id>
+            <name>Scot P. Floess</name>
+            <email>scot.floess@gmail.com</email>
+            <organization>FlossWare</organization>
+            <organizationUrl>https://github.com/FlossWare</organizationUrl>
+        </developer>
+    </developers>
+
+    <issueManagement>
+        <system>GitHub</system>
+        <url>https://github.com/FlossWare/cloud-storage-client/issues</url>
+    </issueManagement>
+
+    <distributionManagement>
+        <repository>
+            <id>packagecloud-flossware</id>
+            <name>packagecloud-flossware</name>
+            <url>https://packagecloud.io/flossware/java/maven2/</url>
+        </repository>
+    </distributionManagement>
+
+    <dependencies>
+        <!-- AWS S3 Support -->
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>s3</artifactId>
+            <version>2.44.12</version>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- Azure Blob Storage Support -->
+        <dependency>
+            <groupId>com.azure</groupId>
+            <artifactId>azure-storage-blob</artifactId>
+            <version>12.34.0</version>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- Google Cloud Storage Support -->
+        <dependency>
+            <groupId>com.google.cloud</groupId>
+            <artifactId>google-cloud-storage</artifactId>
+            <version>2.68.0</version>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- Google Drive API Support -->
+        <dependency>
+            <groupId>com.google.apis</groupId>
+            <artifactId>google-api-services-drive</artifactId>
+            <version>v3-rev20260428-2.0.0</version>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>com.google.auth</groupId>
+            <artifactId>google-auth-library-oauth2-http</artifactId>
+            <version>1.47.0</version>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- Dropbox SDK Support -->
+        <dependency>
+            <groupId>com.dropbox.core</groupId>
+            <artifactId>dropbox-core-sdk</artifactId>
+            <version>7.0.0</version>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- Microsoft Graph (OneDrive) Support -->
+        <dependency>
+            <groupId>com.microsoft.graph</groupId>
+            <artifactId>microsoft-graph</artifactId>
+            <version>6.65.0</version>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- JUnit 5 for testing -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>5.23.0</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.12.1</version>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+            </plugin>
+        </plugins>
+    </build>
+</project>

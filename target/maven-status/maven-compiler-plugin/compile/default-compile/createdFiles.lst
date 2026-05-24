@@ -1,0 +1,3 @@
+org/flossware/cloud/storage/CloudStorageClient.class
+org/flossware/cloud/storage/S3CloudStorageClient.class
+org/flossware/cloud/storage/S3CloudStorageClient$Builder.class
