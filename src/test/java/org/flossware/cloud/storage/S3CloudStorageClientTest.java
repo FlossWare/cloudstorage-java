@@ -6,6 +6,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -262,6 +266,189 @@ class S3CloudStorageClientTest {
 
         S3CloudStorageClient testClient = constructor.newInstance(s3Client, "bucket", null);
         assertTrue(testClient.getDescription().contains("prefix=]"));
+    }
+
+    @Test
+    @DisplayName("Should build with explicit credentials provider")
+    void testBuilderWithCredentialsProvider() throws Exception {
+        try (org.mockito.MockedStatic<S3Client> s3ClientStatic = org.mockito.Mockito.mockStatic(S3Client.class)) {
+            software.amazon.awssdk.services.s3.S3ClientBuilder s3Builder = mock(software.amazon.awssdk.services.s3.S3ClientBuilder.class);
+
+            s3ClientStatic.when(S3Client::builder).thenReturn(s3Builder);
+            when(s3Builder.region((Region) any())).thenReturn(s3Builder);
+            when(s3Builder.credentialsProvider((AwsCredentialsProvider) any())).thenReturn(s3Builder);
+            when(s3Builder.build()).thenReturn(s3Client);
+
+            software.amazon.awssdk.auth.credentials.AwsCredentialsProvider provider =
+                StaticCredentialsProvider.create(AwsBasicCredentials.create("key", "secret"));
+
+            S3CloudStorageClient client = S3CloudStorageClient.builder()
+                .bucket("test-bucket")
+                .credentialsProvider(provider)
+                .build();
+
+            assertNotNull(client);
+            verify(s3Builder).credentialsProvider(provider);
+        }
+    }
+
+    @Test
+    @DisplayName("Should build with access key credentials")
+    void testBuilderWithAccessKey() throws Exception {
+        try (org.mockito.MockedStatic<S3Client> s3ClientStatic = org.mockito.Mockito.mockStatic(S3Client.class)) {
+            software.amazon.awssdk.services.s3.S3ClientBuilder s3Builder = mock(software.amazon.awssdk.services.s3.S3ClientBuilder.class);
+
+            s3ClientStatic.when(S3Client::builder).thenReturn(s3Builder);
+            when(s3Builder.region((Region) any())).thenReturn(s3Builder);
+            when(s3Builder.credentialsProvider((AwsCredentialsProvider) any())).thenReturn(s3Builder);
+            when(s3Builder.build()).thenReturn(s3Client);
+
+            S3CloudStorageClient client = S3CloudStorageClient.builder()
+                .bucket("test-bucket")
+                .credentials("access-key", "secret-key")
+                .build();
+
+            assertNotNull(client);
+            verify(s3Builder).credentialsProvider((AwsCredentialsProvider) any());
+        }
+    }
+
+    @Test
+    @DisplayName("Should build with default credentials provider")
+    void testBuilderWithDefaultCredentials() throws Exception {
+        try (org.mockito.MockedStatic<S3Client> s3ClientStatic = org.mockito.Mockito.mockStatic(S3Client.class);
+             org.mockito.MockedStatic<DefaultCredentialsProvider> defaultCredsStatic =
+                 org.mockito.Mockito.mockStatic(DefaultCredentialsProvider.class)) {
+
+            software.amazon.awssdk.services.s3.S3ClientBuilder s3Builder = mock(software.amazon.awssdk.services.s3.S3ClientBuilder.class);
+            DefaultCredentialsProvider defaultProvider = mock(DefaultCredentialsProvider.class);
+
+            s3ClientStatic.when(S3Client::builder).thenReturn(s3Builder);
+            defaultCredsStatic.when(DefaultCredentialsProvider::create).thenReturn(defaultProvider);
+            when(s3Builder.region((Region) any())).thenReturn(s3Builder);
+            when(s3Builder.credentialsProvider((AwsCredentialsProvider) any())).thenReturn(s3Builder);
+            when(s3Builder.build()).thenReturn(s3Client);
+
+            S3CloudStorageClient client = S3CloudStorageClient.builder()
+                .bucket("test-bucket")
+                .build();
+
+            assertNotNull(client);
+            verify(s3Builder).credentialsProvider(defaultProvider);
+        }
+    }
+
+    @Test
+    @DisplayName("Should set region via string")
+    void testBuilderRegionString() throws Exception {
+        try (org.mockito.MockedStatic<S3Client> s3ClientStatic = org.mockito.Mockito.mockStatic(S3Client.class)) {
+            software.amazon.awssdk.services.s3.S3ClientBuilder s3Builder = mock(software.amazon.awssdk.services.s3.S3ClientBuilder.class);
+
+            s3ClientStatic.when(S3Client::builder).thenReturn(s3Builder);
+            when(s3Builder.region((Region) any())).thenReturn(s3Builder);
+            when(s3Builder.credentialsProvider((AwsCredentialsProvider) any())).thenReturn(s3Builder);
+            when(s3Builder.build()).thenReturn(s3Client);
+
+            S3CloudStorageClient client = S3CloudStorageClient.builder()
+                .bucket("test-bucket")
+                .region("us-west-2")
+                .build();
+
+            assertNotNull(client);
+            verify(s3Builder).region((Region) any());
+        }
+    }
+
+    @Test
+    @DisplayName("Should build with prefix")
+    void testBuilderWithPrefix() throws Exception {
+        try (org.mockito.MockedStatic<S3Client> s3ClientStatic = org.mockito.Mockito.mockStatic(S3Client.class)) {
+            software.amazon.awssdk.services.s3.S3ClientBuilder s3Builder = mock(software.amazon.awssdk.services.s3.S3ClientBuilder.class);
+
+            s3ClientStatic.when(S3Client::builder).thenReturn(s3Builder);
+            when(s3Builder.region((Region) any())).thenReturn(s3Builder);
+            when(s3Builder.credentialsProvider((AwsCredentialsProvider) any())).thenReturn(s3Builder);
+            when(s3Builder.build()).thenReturn(s3Client);
+
+            S3CloudStorageClient client = S3CloudStorageClient.builder()
+                .bucket("test-bucket")
+                .prefix("my-prefix")
+                .build();
+
+            assertNotNull(client);
+            assertTrue(client.getDescription().contains("my-prefix"));
+        }
+    }
+
+    @Test
+    @DisplayName("Should handle list with prefix filtering")
+    void testListWithPrefixFiltering() throws Exception {
+        client = createTestClient("base-prefix");
+
+        S3Object obj1 = S3Object.builder().key("base-prefix/file1.txt").build();
+        S3Object obj2 = S3Object.builder().key("base-prefix/file2.txt").build();
+
+        ListObjectsV2Response response = ListObjectsV2Response.builder()
+            .contents(Arrays.asList(obj1, obj2))
+            .build();
+
+        when(s3Client.listObjectsV2((ListObjectsV2Request) any())).thenReturn(response);
+
+        List<String> files = client.list("");
+        assertEquals(2, files.size());
+        assertTrue(files.contains("file1.txt"));
+        assertTrue(files.contains("file2.txt"));
+    }
+
+    @Test
+    @DisplayName("Should handle openFile failure")
+    void testOpenFileFailure() throws Exception {
+        client = createTestClient("");
+        when(s3Client.getObject((GetObjectRequest) any()))
+            .thenThrow(new RuntimeException("S3 error"));
+
+        IOException exception = assertThrows(IOException.class,
+            () -> client.openFile("file.txt"));
+        assertTrue(exception.getMessage().contains("Failed to open file from S3"));
+    }
+
+    @Test
+    @DisplayName("Should handle list failure")
+    void testListFailure() throws Exception {
+        client = createTestClient("");
+        when(s3Client.listObjectsV2((ListObjectsV2Request) any()))
+            .thenThrow(new RuntimeException("S3 error"));
+
+        IOException exception = assertThrows(IOException.class,
+            () -> client.list("prefix"));
+        assertTrue(exception.getMessage().contains("Failed to list files in S3"));
+    }
+
+    @Test
+    @DisplayName("Should handle getFileSize general failure")
+    void testGetFileSizeFailure() throws Exception {
+        client = createTestClient("");
+        when(s3Client.headObject((HeadObjectRequest) any()))
+            .thenThrow(new RuntimeException("S3 error"));
+
+        IOException exception = assertThrows(IOException.class,
+            () -> client.getFileSize("file.txt"));
+        assertTrue(exception.getMessage().contains("Failed to get file size from S3"));
+    }
+
+    @Test
+    @DisplayName("Should build key with prefix ending in slash")
+    void testBuildKeyWithPrefixEndingInSlash() throws Exception {
+        client = createTestClient("prefix/");
+
+        byte[] expectedData = "test".getBytes();
+        when(s3Client.getObject((GetObjectRequest) any()))
+            .thenReturn(new ResponseInputStream<>(
+                GetObjectResponse.builder().build(),
+                new ByteArrayInputStream(expectedData)));
+
+        byte[] result = client.readFile("file.txt");
+        assertArrayEquals(expectedData, result);
     }
 
     private S3CloudStorageClient createTestClient(String prefix) throws Exception {
