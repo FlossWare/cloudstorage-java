@@ -19,6 +19,8 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
@@ -68,7 +70,9 @@ class GoogleDriveCloudStorageClientTest {
     void testBuilderChaining() throws Exception {
         GoogleDriveCloudStorageClient.Builder builder = GoogleDriveCloudStorageClient.builder();
 
+        com.google.auth.oauth2.GoogleCredentials creds = mock(com.google.auth.oauth2.GoogleCredentials.class);
         InputStream credStream = new ByteArrayInputStream("{}".getBytes());
+        assertSame(builder, builder.credentials(creds));
         assertSame(builder, builder.folderId("folder-123"));
         assertSame(builder, builder.applicationName("test-app"));
     }
@@ -412,6 +416,175 @@ class GoogleDriveCloudStorageClientTest {
         client = createTestClient(null);
         assertNotNull(client);
         assertTrue(client.getDescription().contains("folder=null"));
+    }
+
+    @Test
+    @DisplayName("Should include folderId in query when searching for file")
+    void testFindFileIdWithFolderId() throws Exception {
+        client = createTestClient("folder-abc");
+
+        setupFindFileIdMocks("file-id-123", "test.txt");
+
+        assertTrue(client.exists("test.txt"));
+
+        // Verify the query included the folderId
+        verify(list).setQ(contains("'folder-abc' in parents"));
+    }
+
+    @Test
+    @DisplayName("Should build with provided credentials")
+    void testBuilderWithCredentials() throws Exception {
+        com.google.auth.oauth2.GoogleCredentials credentials = mock(com.google.auth.oauth2.GoogleCredentials.class);
+        com.google.api.client.http.javanet.NetHttpTransport httpTransport = mock(com.google.api.client.http.javanet.NetHttpTransport.class);
+
+        try (org.mockito.MockedStatic<com.google.api.client.googleapis.javanet.GoogleNetHttpTransport> transportStatic =
+                 org.mockito.Mockito.mockStatic(com.google.api.client.googleapis.javanet.GoogleNetHttpTransport.class);
+             org.mockito.MockedConstruction<com.google.api.services.drive.Drive.Builder> driveBuilderMock =
+                 org.mockito.Mockito.mockConstruction(com.google.api.services.drive.Drive.Builder.class,
+                     (mock, context) -> {
+                         when(mock.setApplicationName(anyString())).thenReturn(mock);
+                         when(mock.build()).thenReturn(driveService);
+                     })) {
+
+            transportStatic.when(com.google.api.client.googleapis.javanet.GoogleNetHttpTransport::newTrustedTransport)
+                .thenReturn(httpTransport);
+
+            GoogleDriveCloudStorageClient result = GoogleDriveCloudStorageClient.builder()
+                .credentials(credentials)
+                .build();
+
+            assertNotNull(result);
+        }
+    }
+
+    @Test
+    @DisplayName("Should build with credentialsFromStream")
+    void testBuilderWithCredentialsFromStream() throws Exception {
+        com.google.auth.oauth2.GoogleCredentials credentials = mock(com.google.auth.oauth2.GoogleCredentials.class);
+        when(credentials.createScoped(anyList())).thenReturn(credentials);
+        com.google.api.client.http.javanet.NetHttpTransport httpTransport = mock(com.google.api.client.http.javanet.NetHttpTransport.class);
+
+        try (org.mockito.MockedStatic<com.google.auth.oauth2.GoogleCredentials> credStatic =
+                 org.mockito.Mockito.mockStatic(com.google.auth.oauth2.GoogleCredentials.class);
+             org.mockito.MockedStatic<com.google.api.client.googleapis.javanet.GoogleNetHttpTransport> transportStatic =
+                 org.mockito.Mockito.mockStatic(com.google.api.client.googleapis.javanet.GoogleNetHttpTransport.class);
+             org.mockito.MockedConstruction<com.google.api.services.drive.Drive.Builder> driveBuilderMock =
+                 org.mockito.Mockito.mockConstruction(com.google.api.services.drive.Drive.Builder.class,
+                     (mock, context) -> {
+                         when(mock.setApplicationName(anyString())).thenReturn(mock);
+                         when(mock.build()).thenReturn(driveService);
+                     })) {
+
+            credStatic.when(() -> com.google.auth.oauth2.GoogleCredentials.fromStream(any(InputStream.class)))
+                .thenReturn(credentials);
+            transportStatic.when(com.google.api.client.googleapis.javanet.GoogleNetHttpTransport::newTrustedTransport)
+                .thenReturn(httpTransport);
+
+            InputStream credStream = new ByteArrayInputStream("{}".getBytes());
+            GoogleDriveCloudStorageClient result = GoogleDriveCloudStorageClient.builder()
+                .credentialsFromStream(credStream)
+                .build();
+
+            assertNotNull(result);
+            verify(credentials).createScoped(anyList());
+        }
+    }
+
+    @Test
+    @DisplayName("Should build with default credentials")
+    void testBuilderWithDefaultCredentials() throws Exception {
+        com.google.auth.oauth2.GoogleCredentials credentials = mock(com.google.auth.oauth2.GoogleCredentials.class);
+        when(credentials.createScoped(anyList())).thenReturn(credentials);
+        com.google.api.client.http.javanet.NetHttpTransport httpTransport = mock(com.google.api.client.http.javanet.NetHttpTransport.class);
+
+        try (org.mockito.MockedStatic<com.google.auth.oauth2.GoogleCredentials> credStatic =
+                 org.mockito.Mockito.mockStatic(com.google.auth.oauth2.GoogleCredentials.class);
+             org.mockito.MockedStatic<com.google.api.client.googleapis.javanet.GoogleNetHttpTransport> transportStatic =
+                 org.mockito.Mockito.mockStatic(com.google.api.client.googleapis.javanet.GoogleNetHttpTransport.class);
+             org.mockito.MockedConstruction<com.google.api.services.drive.Drive.Builder> driveBuilderMock =
+                 org.mockito.Mockito.mockConstruction(com.google.api.services.drive.Drive.Builder.class,
+                     (mock, context) -> {
+                         when(mock.setApplicationName(anyString())).thenReturn(mock);
+                         when(mock.build()).thenReturn(driveService);
+                     })) {
+
+            credStatic.when(com.google.auth.oauth2.GoogleCredentials::getApplicationDefault)
+                .thenReturn(credentials);
+            transportStatic.when(com.google.api.client.googleapis.javanet.GoogleNetHttpTransport::newTrustedTransport)
+                .thenReturn(httpTransport);
+
+            GoogleDriveCloudStorageClient result = GoogleDriveCloudStorageClient.builder().build();
+
+            assertNotNull(result);
+            verify(credentials).createScoped(anyList());
+        }
+    }
+
+    @Test
+    @DisplayName("Should build with folderId")
+    void testBuilderWithFolderId() throws Exception {
+        com.google.auth.oauth2.GoogleCredentials credentials = mock(com.google.auth.oauth2.GoogleCredentials.class);
+        when(credentials.createScoped(anyList())).thenReturn(credentials);
+        com.google.api.client.http.javanet.NetHttpTransport httpTransport = mock(com.google.api.client.http.javanet.NetHttpTransport.class);
+
+        try (org.mockito.MockedStatic<com.google.auth.oauth2.GoogleCredentials> credStatic =
+                 org.mockito.Mockito.mockStatic(com.google.auth.oauth2.GoogleCredentials.class);
+             org.mockito.MockedStatic<com.google.api.client.googleapis.javanet.GoogleNetHttpTransport> transportStatic =
+                 org.mockito.Mockito.mockStatic(com.google.api.client.googleapis.javanet.GoogleNetHttpTransport.class);
+             org.mockito.MockedConstruction<com.google.api.services.drive.Drive.Builder> driveBuilderMock =
+                 org.mockito.Mockito.mockConstruction(com.google.api.services.drive.Drive.Builder.class,
+                     (mock, context) -> {
+                         when(mock.setApplicationName(anyString())).thenReturn(mock);
+                         when(mock.build()).thenReturn(driveService);
+                     })) {
+
+            credStatic.when(com.google.auth.oauth2.GoogleCredentials::getApplicationDefault)
+                .thenReturn(credentials);
+            transportStatic.when(com.google.api.client.googleapis.javanet.GoogleNetHttpTransport::newTrustedTransport)
+                .thenReturn(httpTransport);
+
+            GoogleDriveCloudStorageClient result = GoogleDriveCloudStorageClient.builder()
+                .folderId("my-folder-id")
+                .build();
+
+            assertNotNull(result);
+            assertTrue(result.getDescription().contains("my-folder-id"));
+        }
+    }
+
+    @Test
+    @DisplayName("Should build with custom applicationName")
+    void testBuilderWithApplicationName() throws Exception {
+        com.google.auth.oauth2.GoogleCredentials credentials = mock(com.google.auth.oauth2.GoogleCredentials.class);
+        when(credentials.createScoped(anyList())).thenReturn(credentials);
+        com.google.api.client.http.javanet.NetHttpTransport httpTransport = mock(com.google.api.client.http.javanet.NetHttpTransport.class);
+
+        com.google.api.services.drive.Drive.Builder[] capturedBuilder = new com.google.api.services.drive.Drive.Builder[1];
+
+        try (org.mockito.MockedStatic<com.google.auth.oauth2.GoogleCredentials> credStatic =
+                 org.mockito.Mockito.mockStatic(com.google.auth.oauth2.GoogleCredentials.class);
+             org.mockito.MockedStatic<com.google.api.client.googleapis.javanet.GoogleNetHttpTransport> transportStatic =
+                 org.mockito.Mockito.mockStatic(com.google.api.client.googleapis.javanet.GoogleNetHttpTransport.class);
+             org.mockito.MockedConstruction<com.google.api.services.drive.Drive.Builder> driveBuilderMock =
+                 org.mockito.Mockito.mockConstruction(com.google.api.services.drive.Drive.Builder.class,
+                     (mock, context) -> {
+                         capturedBuilder[0] = mock;
+                         when(mock.setApplicationName(anyString())).thenReturn(mock);
+                         when(mock.build()).thenReturn(driveService);
+                     })) {
+
+            credStatic.when(com.google.auth.oauth2.GoogleCredentials::getApplicationDefault)
+                .thenReturn(credentials);
+            transportStatic.when(com.google.api.client.googleapis.javanet.GoogleNetHttpTransport::newTrustedTransport)
+                .thenReturn(httpTransport);
+
+            GoogleDriveCloudStorageClient result = GoogleDriveCloudStorageClient.builder()
+                .applicationName("MyCustomApp")
+                .build();
+
+            assertNotNull(result);
+            verify(capturedBuilder[0]).setApplicationName("MyCustomApp");
+        }
     }
 
     private void setupFindFileIdMocks(String fileId, String fileName) throws IOException {

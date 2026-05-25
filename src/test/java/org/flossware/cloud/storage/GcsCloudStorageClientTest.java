@@ -279,6 +279,171 @@ class GcsCloudStorageClientTest {
         assertTrue(testClient.getDescription().contains("prefix=]"));
     }
 
+    @Test
+    @DisplayName("Should build with provided storage")
+    void testBuilderWithProvidedStorage() {
+        GcsCloudStorageClient result = GcsCloudStorageClient.builder()
+            .storage(storage)
+            .bucket("test-bucket")
+            .build();
+
+        assertNotNull(result);
+        assertTrue(result.getDescription().contains("test-bucket"));
+    }
+
+    @Test
+    @DisplayName("Should build with projectId")
+    void testBuilderWithProjectId() {
+        try (org.mockito.MockedStatic<com.google.cloud.storage.StorageOptions> optionsStatic =
+                 org.mockito.Mockito.mockStatic(com.google.cloud.storage.StorageOptions.class)) {
+
+            com.google.cloud.storage.StorageOptions.Builder optionsBuilder =
+                mock(com.google.cloud.storage.StorageOptions.Builder.class);
+            com.google.cloud.storage.StorageOptions storageOptions =
+                mock(com.google.cloud.storage.StorageOptions.class);
+
+            optionsStatic.when(com.google.cloud.storage.StorageOptions::newBuilder)
+                .thenReturn(optionsBuilder);
+            when(optionsBuilder.setProjectId("test-project")).thenReturn(optionsBuilder);
+            when(optionsBuilder.build()).thenReturn(storageOptions);
+            when(storageOptions.getService()).thenReturn(storage);
+
+            GcsCloudStorageClient result = GcsCloudStorageClient.builder()
+                .projectId("test-project")
+                .bucket("test-bucket")
+                .build();
+
+            assertNotNull(result);
+            verify(optionsBuilder).setProjectId("test-project");
+        }
+    }
+
+    @Test
+    @DisplayName("Should build with default instance")
+    void testBuilderWithDefaultInstance() {
+        try (org.mockito.MockedStatic<com.google.cloud.storage.StorageOptions> optionsStatic =
+                 org.mockito.Mockito.mockStatic(com.google.cloud.storage.StorageOptions.class)) {
+
+            com.google.cloud.storage.StorageOptions storageOptions =
+                mock(com.google.cloud.storage.StorageOptions.class);
+
+            optionsStatic.when(com.google.cloud.storage.StorageOptions::getDefaultInstance)
+                .thenReturn(storageOptions);
+            when(storageOptions.getService()).thenReturn(storage);
+
+            GcsCloudStorageClient result = GcsCloudStorageClient.builder()
+                .bucket("test-bucket")
+                .build();
+
+            assertNotNull(result);
+        }
+    }
+
+    @Test
+    @DisplayName("Should build with prefix")
+    void testBuilderWithPrefix() {
+        GcsCloudStorageClient result = GcsCloudStorageClient.builder()
+            .storage(storage)
+            .bucket("test-bucket")
+            .prefix("my-prefix")
+            .build();
+
+        assertNotNull(result);
+        assertTrue(result.getDescription().contains("my-prefix"));
+    }
+
+    @Test
+    @DisplayName("Should throw IOException when openFile fails")
+    void testOpenFileException() throws Exception {
+        client = createTestClient("");
+
+        when(storage.get((BlobId) any())).thenReturn(blob);
+        when(blob.reader()).thenThrow(new RuntimeException("Storage error"));
+
+        IOException exception = assertThrows(IOException.class,
+            () -> client.openFile("file.txt"));
+
+        assertTrue(exception.getMessage().contains("Failed to open file from GCS"));
+    }
+
+    @Test
+    @DisplayName("Should handle removePrefix when blobName matches prefix")
+    void testRemovePrefixWithMatch() throws Exception {
+        client = createTestClient("my-prefix");
+
+        java.lang.reflect.Method removePrefix = GcsCloudStorageClient.class.getDeclaredMethod(
+            "removePrefix", String.class);
+        removePrefix.setAccessible(true);
+
+        String result = (String) removePrefix.invoke(client, "my-prefix/file.txt");
+        assertEquals("file.txt", result);
+    }
+
+    @Test
+    @DisplayName("Should handle removePrefix when blobName doesn't match prefix")
+    void testRemovePrefixNoMatch() throws Exception {
+        client = createTestClient("my-prefix");
+
+        java.lang.reflect.Method removePrefix = GcsCloudStorageClient.class.getDeclaredMethod(
+            "removePrefix", String.class);
+        removePrefix.setAccessible(true);
+
+        String result = (String) removePrefix.invoke(client, "other/path/file.txt");
+        assertEquals("other/path/file.txt", result);
+    }
+
+    @Test
+    @DisplayName("Should build blob name with empty prefix")
+    void testBuildBlobNameEmptyPrefix() throws Exception {
+        client = createTestClient("");
+
+        java.lang.reflect.Method buildBlobName = GcsCloudStorageClient.class.getDeclaredMethod(
+            "buildBlobName", String.class);
+        buildBlobName.setAccessible(true);
+
+        String result = (String) buildBlobName.invoke(client, "file.txt");
+        assertEquals("file.txt", result);
+    }
+
+    @Test
+    @DisplayName("Should build blob name with non-empty prefix without slash")
+    void testBuildBlobNameWithPrefix() throws Exception {
+        client = createTestClient("my-prefix");
+
+        java.lang.reflect.Method buildBlobName = GcsCloudStorageClient.class.getDeclaredMethod(
+            "buildBlobName", String.class);
+        buildBlobName.setAccessible(true);
+
+        String result = (String) buildBlobName.invoke(client, "file.txt");
+        assertEquals("my-prefix/file.txt", result);
+    }
+
+    @Test
+    @DisplayName("Should build blob name with prefix ending in slash")
+    void testBuildBlobNamePrefixEndingSlash() throws Exception {
+        client = createTestClient("my-prefix/");
+
+        java.lang.reflect.Method buildBlobName = GcsCloudStorageClient.class.getDeclaredMethod(
+            "buildBlobName", String.class);
+        buildBlobName.setAccessible(true);
+
+        String result = (String) buildBlobName.invoke(client, "file.txt");
+        assertEquals("my-prefix/file.txt", result);
+    }
+
+    @Test
+    @DisplayName("Should handle removePrefix with prefix ending in slash")
+    void testRemovePrefixWithSlash() throws Exception {
+        client = createTestClient("my-prefix/");
+
+        java.lang.reflect.Method removePrefix = GcsCloudStorageClient.class.getDeclaredMethod(
+            "removePrefix", String.class);
+        removePrefix.setAccessible(true);
+
+        String result = (String) removePrefix.invoke(client, "my-prefix/file.txt");
+        assertEquals("file.txt", result);
+    }
+
     private GcsCloudStorageClient createTestClient(String prefix) throws Exception {
         java.lang.reflect.Constructor<GcsCloudStorageClient> constructor =
             GcsCloudStorageClient.class.getDeclaredConstructor(Storage.class, String.class, String.class);

@@ -432,6 +432,87 @@ class DropboxCloudStorageClientTest {
         assertTrue(files.contains("file1.txt"));
     }
 
+    @Test
+    @DisplayName("Should build with access token")
+    void testBuilderWithAccessToken() {
+        DropboxCloudStorageClient result = DropboxCloudStorageClient.builder()
+            .accessToken("test-access-token")
+            .build();
+
+        assertNotNull(result);
+    }
+
+    @Test
+    @DisplayName("Should build with basePath")
+    void testBuilderWithBasePath() {
+        DropboxCloudStorageClient result = DropboxCloudStorageClient.builder()
+            .accessToken("test-access-token")
+            .basePath("my-base-path")
+            .build();
+
+        assertNotNull(result);
+        assertTrue(result.getDescription().contains("my-base-path"));
+    }
+
+    @Test
+    @DisplayName("Should build with clientIdentifier")
+    void testBuilderWithClientIdentifier() {
+        DropboxCloudStorageClient result = DropboxCloudStorageClient.builder()
+            .accessToken("test-access-token")
+            .clientIdentifier("MyCustomClient")
+            .build();
+
+        assertNotNull(result);
+    }
+
+    @Test
+    @DisplayName("Should throw NullPointerException when accessToken is null")
+    void testBuilderNullAccessToken() {
+        assertThrows(NullPointerException.class,
+            () -> DropboxCloudStorageClient.builder().build());
+    }
+
+    @Test
+    @DisplayName("Should handle removePrefix when filePath doesn't match basePath")
+    void testRemovePrefixNoMatch() throws Exception {
+        DropboxCloudStorageClient testClient = createTestClient("base-prefix");
+
+        java.lang.reflect.Method removePrefix = DropboxCloudStorageClient.class.getDeclaredMethod(
+            "removePrefix", String.class);
+        removePrefix.setAccessible(true);
+
+        // filePath that doesn't start with the expected prefix
+        String result = (String) removePrefix.invoke(testClient, "/other/path/file.txt");
+        assertEquals("/other/path/file.txt", result);
+    }
+
+    @Test
+    @DisplayName("Should handle removePrefix with empty basePath and no leading slash")
+    void testRemovePrefixEmptyBasePathNoSlash() throws Exception {
+        DropboxCloudStorageClient testClient = createTestClient("");
+
+        java.lang.reflect.Method removePrefix = DropboxCloudStorageClient.class.getDeclaredMethod(
+            "removePrefix", String.class);
+        removePrefix.setAccessible(true);
+
+        // filePath without leading slash
+        String result = (String) removePrefix.invoke(testClient, "file.txt");
+        assertEquals("file.txt", result);
+    }
+
+    @Test
+    @DisplayName("Should handle basePath ending with slash in removePrefix")
+    void testRemovePrefixBasePathEndingSlash() throws Exception {
+        DropboxCloudStorageClient testClient = createTestClient("base-prefix/");
+
+        java.lang.reflect.Method removePrefix = DropboxCloudStorageClient.class.getDeclaredMethod(
+            "removePrefix", String.class);
+        removePrefix.setAccessible(true);
+
+        String result = (String) removePrefix.invoke(testClient, "/base-prefix/file.txt");
+        assertEquals("file.txt", result);
+    }
+
     private DropboxCloudStorageClient createTestClient(String basePath) throws Exception {
         java.lang.reflect.Constructor<DropboxCloudStorageClient> constructor =
             DropboxCloudStorageClient.class.getDeclaredConstructor(DbxClientV2.class, String.class);

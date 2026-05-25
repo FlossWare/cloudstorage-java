@@ -325,6 +325,162 @@ class AzureBlobCloudStorageClientTest {
         assertTrue(testClient.getDescription().contains("prefix=]"));
     }
 
+    @Test
+    @DisplayName("Should build with connection string")
+    void testBuilderWithConnectionString() throws Exception {
+        com.azure.storage.blob.BlobServiceClient serviceClient = mock(com.azure.storage.blob.BlobServiceClient.class);
+        when(serviceClient.getBlobContainerClient(anyString())).thenReturn(containerClient);
+
+        try (org.mockito.MockedConstruction<com.azure.storage.blob.BlobServiceClientBuilder> builderMock =
+                 org.mockito.Mockito.mockConstruction(com.azure.storage.blob.BlobServiceClientBuilder.class,
+                     (mock, context) -> {
+                         when(mock.connectionString(anyString())).thenReturn(mock);
+                         when(mock.buildClient()).thenReturn(serviceClient);
+                     })) {
+
+            AzureBlobCloudStorageClient client = AzureBlobCloudStorageClient.builder()
+                .connectionString("DefaultEndpointsProtocol=https;AccountName=myaccount;AccountKey=key123;")
+                .container("test-container")
+                .build();
+
+            assertNotNull(client);
+        }
+    }
+
+    @Test
+    @DisplayName("Should build with account name and key")
+    void testBuilderWithAccountCredentials() throws Exception {
+        com.azure.storage.blob.BlobServiceClient serviceClient = mock(com.azure.storage.blob.BlobServiceClient.class);
+        when(serviceClient.getBlobContainerClient(anyString())).thenReturn(containerClient);
+
+        try (org.mockito.MockedConstruction<com.azure.storage.blob.BlobServiceClientBuilder> builderMock =
+                 org.mockito.Mockito.mockConstruction(com.azure.storage.blob.BlobServiceClientBuilder.class,
+                     (mock, context) -> {
+                         when(mock.endpoint(anyString())).thenReturn(mock);
+                         when(mock.credential(any(com.azure.storage.common.StorageSharedKeyCredential.class))).thenReturn(mock);
+                         when(mock.buildClient()).thenReturn(serviceClient);
+                     })) {
+
+            AzureBlobCloudStorageClient client = AzureBlobCloudStorageClient.builder()
+                .accountName("myaccount")
+                .accountKey("key123")
+                .container("test-container")
+                .build();
+
+            assertNotNull(client);
+        }
+    }
+
+    @Test
+    @DisplayName("Should build with custom endpoint")
+    void testBuilderWithCustomEndpoint() throws Exception {
+        com.azure.storage.blob.BlobServiceClient serviceClient = mock(com.azure.storage.blob.BlobServiceClient.class);
+        when(serviceClient.getBlobContainerClient(anyString())).thenReturn(containerClient);
+
+        try (org.mockito.MockedConstruction<com.azure.storage.blob.BlobServiceClientBuilder> builderMock =
+                 org.mockito.Mockito.mockConstruction(com.azure.storage.blob.BlobServiceClientBuilder.class,
+                     (mock, context) -> {
+                         when(mock.endpoint(anyString())).thenReturn(mock);
+                         when(mock.credential(any(com.azure.storage.common.StorageSharedKeyCredential.class))).thenReturn(mock);
+                         when(mock.buildClient()).thenReturn(serviceClient);
+                     })) {
+
+            AzureBlobCloudStorageClient client = AzureBlobCloudStorageClient.builder()
+                .accountName("myaccount")
+                .accountKey("key123")
+                .endpoint("https://custom.blob.core.windows.net")
+                .container("test-container")
+                .build();
+
+            assertNotNull(client);
+        }
+    }
+
+    @Test
+    @DisplayName("Should build with prefix")
+    void testBuilderWithPrefix() throws Exception {
+        com.azure.storage.blob.BlobServiceClient serviceClient = mock(com.azure.storage.blob.BlobServiceClient.class);
+        when(serviceClient.getBlobContainerClient(anyString())).thenReturn(containerClient);
+        when(containerClient.getBlobContainerName()).thenReturn("test-container");
+
+        try (org.mockito.MockedConstruction<com.azure.storage.blob.BlobServiceClientBuilder> builderMock =
+                 org.mockito.Mockito.mockConstruction(com.azure.storage.blob.BlobServiceClientBuilder.class,
+                     (mock, context) -> {
+                         when(mock.connectionString(anyString())).thenReturn(mock);
+                         when(mock.buildClient()).thenReturn(serviceClient);
+                     })) {
+
+            AzureBlobCloudStorageClient client = AzureBlobCloudStorageClient.builder()
+                .connectionString("DefaultEndpointsProtocol=https;AccountName=myaccount;AccountKey=key123;")
+                .container("test-container")
+                .prefix("my-prefix")
+                .build();
+
+            assertNotNull(client);
+            assertTrue(client.getDescription().contains("my-prefix"));
+        }
+    }
+
+    @Test
+    @DisplayName("Should throw IllegalStateException when neither connectionString nor credentials provided")
+    void testBuilderMissingCredentials() {
+        IllegalStateException exception = assertThrows(IllegalStateException.class,
+            () -> AzureBlobCloudStorageClient.builder()
+                .container("test-container")
+                .build());
+
+        assertTrue(exception.getMessage().contains("Either connectionString or (accountName + accountKey) must be provided"));
+    }
+
+    @Test
+    @DisplayName("Should throw NullPointerException when container is null")
+    void testBuilderNullContainer() {
+        assertThrows(NullPointerException.class,
+            () -> AzureBlobCloudStorageClient.builder()
+                .connectionString("connection-string")
+                .build());
+    }
+
+    @Test
+    @DisplayName("Should handle removePrefix when blobName doesn't match prefix")
+    void testRemovePrefixNoMatch() throws Exception {
+        AzureBlobCloudStorageClient testClient = createTestClient("my-prefix");
+
+        java.lang.reflect.Method removePrefix = AzureBlobCloudStorageClient.class.getDeclaredMethod(
+            "removePrefix", String.class);
+        removePrefix.setAccessible(true);
+
+        // blobName that doesn't start with the expected prefix
+        String result = (String) removePrefix.invoke(testClient, "other/path/file.txt");
+        assertEquals("other/path/file.txt", result);
+    }
+
+    @Test
+    @DisplayName("Should handle buildBlobName with prefix ending in slash")
+    void testBuildBlobNamePrefixEndingSlash() throws Exception {
+        AzureBlobCloudStorageClient testClient = createTestClient("my-prefix/");
+
+        java.lang.reflect.Method buildBlobName = AzureBlobCloudStorageClient.class.getDeclaredMethod(
+            "buildBlobName", String.class);
+        buildBlobName.setAccessible(true);
+
+        String result = (String) buildBlobName.invoke(testClient, "file.txt");
+        assertEquals("my-prefix/file.txt", result);
+    }
+
+    @Test
+    @DisplayName("Should handle removePrefix with prefix ending in slash")
+    void testRemovePrefixEndingSlash() throws Exception {
+        AzureBlobCloudStorageClient testClient = createTestClient("my-prefix/");
+
+        java.lang.reflect.Method removePrefix = AzureBlobCloudStorageClient.class.getDeclaredMethod(
+            "removePrefix", String.class);
+        removePrefix.setAccessible(true);
+
+        String result = (String) removePrefix.invoke(testClient, "my-prefix/file.txt");
+        assertEquals("file.txt", result);
+    }
+
     private AzureBlobCloudStorageClient createTestClient(String prefix) throws Exception {
         java.lang.reflect.Constructor<AzureBlobCloudStorageClient> constructor =
             AzureBlobCloudStorageClient.class.getDeclaredConstructor(BlobContainerClient.class, String.class);

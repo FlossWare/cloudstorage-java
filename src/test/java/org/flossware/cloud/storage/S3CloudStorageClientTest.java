@@ -451,6 +451,20 @@ class S3CloudStorageClientTest {
         assertArrayEquals(expectedData, result);
     }
 
+    @Test
+    @DisplayName("Should handle removePrefix when key doesn't match prefix")
+    void testRemovePrefixNoMatch() throws Exception {
+        client = createTestClient("my-prefix/");
+
+        java.lang.reflect.Method removePrefix = S3CloudStorageClient.class.getDeclaredMethod(
+            "removePrefix", String.class);
+        removePrefix.setAccessible(true);
+
+        // key that doesn't start with the expected prefix
+        String result = (String) removePrefix.invoke(client, "other/path/file.txt");
+        assertEquals("other/path/file.txt", result);
+    }
+
     private S3CloudStorageClient createTestClient(String prefix) throws Exception {
         java.lang.reflect.Constructor<S3CloudStorageClient> constructor =
             S3CloudStorageClient.class.getDeclaredConstructor(S3Client.class, String.class, String.class);
