@@ -1,7 +1,7 @@
-/home/runner/work/jcloudstorage/jcloudstorage/src/main/java/org/flossware/cloud/storage/AzureBlobCloudStorageClient.java
-/home/runner/work/jcloudstorage/jcloudstorage/src/main/java/org/flossware/cloud/storage/CloudStorageClient.java
-/home/runner/work/jcloudstorage/jcloudstorage/src/main/java/org/flossware/cloud/storage/DropboxCloudStorageClient.java
-/home/runner/work/jcloudstorage/jcloudstorage/src/main/java/org/flossware/cloud/storage/GcsCloudStorageClient.java
-/home/runner/work/jcloudstorage/jcloudstorage/src/main/java/org/flossware/cloud/storage/GoogleDriveCloudStorageClient.java
-/home/runner/work/jcloudstorage/jcloudstorage/src/main/java/org/flossware/cloud/storage/OneDriveCloudStorageClient.java
-/home/runner/work/jcloudstorage/jcloudstorage/src/main/java/org/flossware/cloud/storage/S3CloudStorageClient.java
+/home/sfloess/Development/github/FlossWare/jcloudstorage/src/main/java/org/flossware/cloud/storage/AzureBlobCloudStorageClient.java
+/home/sfloess/Development/github/FlossWare/jcloudstorage/src/main/java/org/flossware/cloud/storage/CloudStorageClient.java
+/home/sfloess/Development/github/FlossWare/jcloudstorage/src/main/java/org/flossware/cloud/storage/DropboxCloudStorageClient.java
+/home/sfloess/Development/github/FlossWare/jcloudstorage/src/main/java/org/flossware/cloud/storage/GcsCloudStorageClient.java
+/home/sfloess/Development/github/FlossWare/jcloudstorage/src/main/java/org/flossware/cloud/storage/GoogleDriveCloudStorageClient.java
+/home/sfloess/Development/github/FlossWare/jcloudstorage/src/main/java/org/flossware/cloud/storage/OneDriveCloudStorageClient.java
+/home/sfloess/Development/github/FlossWare/jcloudstorage/src/main/java/org/flossware/cloud/storage/S3CloudStorageClient.java
