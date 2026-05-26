@@ -1,7 +1,7 @@
 org/flossware/cloud/storage/GcsCloudStorageClient.class
 org/flossware/cloud/storage/S3CloudStorageClient.class
-org/flossware/cloud/storage/AzureBlobCloudStorageClient.class
 org/flossware/cloud/storage/DropboxCloudStorageClient$Builder.class
+org/flossware/cloud/storage/AzureBlobCloudStorageClient.class
 org/flossware/cloud/storage/S3CloudStorageClient$Builder.class
 org/flossware/cloud/storage/AzureBlobCloudStorageClient$Builder.class
 org/flossware/cloud/storage/GcsCloudStorageClient$Builder.class
