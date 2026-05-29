@@ -115,4 +115,4 @@ Apache License 2.0
 
 ## Related Projects
 
-- [jclassloader](https://github.com/FlossWare/jclassloader) - Dynamic class loading using cloud-storage-client
+- [jclassloader](https://github.com/FlossWare/classloader-java) - Dynamic class loading using cloud-storage-client
