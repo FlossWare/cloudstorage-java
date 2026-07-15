@@ -116,21 +116,11 @@ public class GcsCloudStorageClient implements CloudStorageClient {
     }
 
     private String buildBlobName(String path) {
-        if (prefix.isEmpty()) {
-            return path;
-        }
-        return prefix + (prefix.endsWith("/") ? "" : "/") + path;
+        return PrefixUtils.buildPrefixedPath(prefix, path);
     }
 
     private String removePrefix(String blobName) {
-        if (prefix.isEmpty()) {
-            return blobName;
-        }
-        String prefixWithSlash = prefix.endsWith("/") ? prefix : prefix + "/";
-        if (blobName.startsWith(prefixWithSlash)) {
-            return blobName.substring(prefixWithSlash.length());
-        }
-        return blobName;
+        return PrefixUtils.removePrefix(prefix, blobName);
     }
 
     public static Builder builder() {

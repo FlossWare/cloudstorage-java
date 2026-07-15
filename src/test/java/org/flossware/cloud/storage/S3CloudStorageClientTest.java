@@ -172,6 +172,7 @@ class S3CloudStorageClientTest {
 
         ListObjectsV2Response response = ListObjectsV2Response.builder()
             .contents(Arrays.asList(obj1, obj2))
+            .isTruncated(false)
             .build();
 
         when(s3Client.listObjectsV2((ListObjectsV2Request) any())).thenReturn(response);
@@ -390,6 +391,7 @@ class S3CloudStorageClientTest {
 
         ListObjectsV2Response response = ListObjectsV2Response.builder()
             .contents(Arrays.asList(obj1, obj2))
+            .isTruncated(false)
             .build();
 
         when(s3Client.listObjectsV2((ListObjectsV2Request) any())).thenReturn(response);
@@ -463,6 +465,36 @@ class S3CloudStorageClientTest {
         // key that doesn't start with the expected prefix
         String result = (String) removePrefix.invoke(client, "other/path/file.txt");
         assertEquals("other/path/file.txt", result);
+    }
+
+    @Test
+    @DisplayName("Should handle paginated S3 list results")
+    void testListPagination() throws Exception {
+        client = createTestClient("");
+
+        S3Object obj1 = S3Object.builder().key("file1.txt").build();
+        S3Object obj2 = S3Object.builder().key("file2.txt").build();
+
+        ListObjectsV2Response page1 = ListObjectsV2Response.builder()
+            .contents(java.util.Arrays.asList(obj1))
+            .isTruncated(true)
+            .nextContinuationToken("token-123")
+            .build();
+
+        ListObjectsV2Response page2 = ListObjectsV2Response.builder()
+            .contents(java.util.Arrays.asList(obj2))
+            .isTruncated(false)
+            .build();
+
+        when(s3Client.listObjectsV2((ListObjectsV2Request) any()))
+            .thenReturn(page1)
+            .thenReturn(page2);
+
+        java.util.List<String> files = client.list("prefix");
+        assertEquals(2, files.size());
+        assertTrue(files.contains("file1.txt"));
+        assertTrue(files.contains("file2.txt"));
+        verify(s3Client, times(2)).listObjectsV2((ListObjectsV2Request) any());
     }
 
     private S3CloudStorageClient createTestClient(String prefix) throws Exception {

@@ -1,20 +1,30 @@
-# JCloudStorage
+# cloudstorage-java
 
-Universal cloud storage abstraction library for Java. Provides a simple, unified API for reading files from AWS S3, Azure Blob Storage, Google Cloud Storage, Google Drive, Dropbox, and OneDrive.
+A lightweight Java library that provides a unified, read-only API for accessing files across multiple cloud storage providers. Write your file-reading logic once and swap providers without changing application code.
 
-## Features
+## Supported Providers
 
-- ✅ **Unified API** - Single interface for all cloud providers
-- ✅ **6 Cloud Providers** - AWS S3, Azure Blob, GCS, Google Drive, Dropbox, OneDrive
-- ✅ **Builder Pattern** - Fluent, type-safe configuration
-- ✅ **Optional Dependencies** - Include only the providers you need
-- ✅ **Thread-Safe** - Concurrent read operations supported
-- ✅ **AutoCloseable** - Proper resource management
-- ✅ **Minimal Dependencies** - Java 11+, provider SDKs are optional
+| Provider | Implementation | Required Dependency |
+|----------|---------------|-------------------|
+| AWS S3 | `S3CloudStorageClient` | `software.amazon.awssdk:s3` |
+| Azure Blob Storage | `AzureBlobCloudStorageClient` | `com.azure:azure-storage-blob` |
+| Google Cloud Storage | `GcsCloudStorageClient` | `com.google.cloud:google-cloud-storage` |
+| Google Drive | `GoogleDriveCloudStorageClient` | `com.google.apis:google-api-services-drive` |
+| Dropbox | `DropboxCloudStorageClient` | `com.dropbox.core:dropbox-core-sdk` |
+| OneDrive | `OneDriveCloudStorageClient` | *(none -- uses Microsoft Graph REST API directly)* |
 
-## Quick Start
+All provider dependencies are declared as `<optional>` in the POM. You only need to include the dependency for the provider(s) you use.
 
-### Maven Dependency
+## Installation
+
+Add the library to your `pom.xml`:
+
+```xml
+<repository>
+    <id>packagecloud-flossware</id>
+    <url>https://packagecloud.io/flossware/java/maven2/</url>
+</repository>
+```
 
 ```xml
 <dependency>
@@ -22,8 +32,11 @@ Universal cloud storage abstraction library for Java. Provides a simple, unified
     <artifactId>cloudstorage-java</artifactId>
     <version>1.0</version>
 </dependency>
+```
 
-<!-- Add provider SDK (only include what you need) -->
+Then add the optional dependency for your chosen provider. For example, for AWS S3:
+
+```xml
 <dependency>
     <groupId>software.amazon.awssdk</groupId>
     <artifactId>s3</artifactId>
@@ -31,48 +44,9 @@ Universal cloud storage abstraction library for Java. Provides a simple, unified
 </dependency>
 ```
 
-### Basic Usage
+## API Overview
 
-```java
-import org.flossware.cloud.storage.CloudStorageClient;
-import org.flossware.cloud.storage.S3CloudStorageClient;
-import software.amazon.awssdk.regions.Region;
-
-// Create S3 client
-CloudStorageClient client = S3CloudStorageClient.builder()
-    .bucket("my-bucket")
-    .region(Region.US_EAST_1)
-    .build();
-
-// Read a file
-byte[] data = client.readFile("path/to/file.txt");
-
-// Check if file exists
-if (client.exists("path/to/file.txt")) {
-    System.out.println("File exists!");
-}
-
-// List files with prefix
-List<String> files = client.list("path/to/directory/");
-
-// Clean up
-client.close();
-```
-
-## Supported Providers
-
-### AWS S3
-
-```java
-CloudStorageClient s3 = S3CloudStorageClient.builder()
-    .bucket("my-bucket")
-    .region(Region.US_WEST_2)
-    .prefix("optional/prefix/")
-    .credentials("access-key", "secret-key")  // Optional (uses IAM by default)
-    .build();
-```
-
-## API Reference
+All providers implement the `CloudStorageClient` interface:
 
 ```java
 public interface CloudStorageClient extends AutoCloseable {
@@ -86,33 +60,160 @@ public interface CloudStorageClient extends AutoCloseable {
 }
 ```
 
-## Versioning and Releases
+## Quick Start
 
-This project uses **X.Y semantic versioning** (e.g., 1.0, 1.1, 2.0). Versions are automatically incremented on commits to the main branch and published to packagecloud.io.
+### AWS S3
 
-### Maven Repository
+```java
+try (CloudStorageClient client = S3CloudStorageClient.builder()
+        .bucket("my-bucket")
+        .region(Region.US_EAST_1)
+        .prefix("data/")                         // optional key prefix
+        .credentials("accessKey", "secretKey")   // or use default credentials
+        .build()) {
 
-```xml
-<repositories>
-    <repository>
-        <id>packagecloud-flossware</id>
-        <url>https://packagecloud.io/flossware/java/maven2</url>
-    </repository>
-</repositories>
+    byte[] data = client.readFile("report.csv");
+    List<String> files = client.list("reports/");
+}
 ```
 
-## Building from Source
+Authentication options:
+- `.credentials("accessKeyId", "secretAccessKey")` -- static credentials
+- `.credentialsProvider(provider)` -- custom `AwsCredentialsProvider`
+- *(omit both)* -- uses `DefaultCredentialsProvider` (IAM roles, env vars, etc.)
+
+### Azure Blob Storage
+
+```java
+try (CloudStorageClient client = AzureBlobCloudStorageClient.builder()
+        .connectionString("DefaultEndpointsProtocol=https;AccountName=...")
+        .container("my-container")
+        .prefix("uploads/")                      // optional blob prefix
+        .build()) {
+
+    boolean found = client.exists("image.png");
+    long size = client.getFileSize("image.png");
+}
+```
+
+Authentication options:
+- `.connectionString(connStr)` -- Azure connection string
+- `.accountName(name).accountKey(key)` -- shared key credentials (optionally with `.endpoint(url)`)
+
+### Google Cloud Storage
+
+```java
+try (CloudStorageClient client = GcsCloudStorageClient.builder()
+        .bucket("my-gcs-bucket")
+        .projectId("my-project")                 // optional
+        .prefix("archive/")                      // optional
+        .build()) {
+
+    try (InputStream in = client.openFile("document.pdf")) {
+        // stream the file
+    }
+}
+```
+
+Authentication options:
+- `.projectId("project")` -- uses application default credentials with the given project
+- `.storage(storageInstance)` -- inject a pre-configured `Storage` client
+- *(omit both)* -- uses `StorageOptions.getDefaultInstance()`
+
+### Google Drive
+
+```java
+try (CloudStorageClient client = GoogleDriveCloudStorageClient.builder()
+        .credentialsFromStream(new FileInputStream("service-account.json"))
+        .folderId("1A2B3C...")                   // optional root folder
+        .applicationName("MyApp")                // optional
+        .build()) {
+
+    List<String> files = client.list("");
+    byte[] data = client.readFile("spreadsheet.xlsx");
+}
+```
+
+Authentication options:
+- `.credentialsFromStream(inputStream)` -- service account JSON key file
+- `.credentials(googleCredentials)` -- pre-built `GoogleCredentials` object
+- *(omit both)* -- uses application default credentials
+
+### Dropbox
+
+```java
+try (CloudStorageClient client = DropboxCloudStorageClient.builder()
+        .accessToken("your-oauth-token")
+        .basePath("/project-files")              // optional root path
+        .clientIdentifier("MyApp/1.0")           // optional
+        .build()) {
+
+    List<String> files = client.list("documents");
+    long size = client.getFileSize("notes.txt");
+}
+```
+
+### OneDrive
+
+```java
+try (CloudStorageClient client = OneDriveCloudStorageClient.builder()
+        .accessToken("your-oauth-bearer-token")
+        .basePath("Documents/work")              // optional
+        .driveId("drive-id")                     // optional, defaults to user's drive
+        .build()) {
+
+    byte[] data = client.readFile("presentation.pptx");
+    boolean exists = client.exists("draft.docx");
+}
+```
+
+Requires an OAuth access token with `Files.Read.All` permissions. Uses the Microsoft Graph REST API directly -- no additional SDK dependency required.
+
+## Provider-Agnostic Code
+
+The primary benefit of this library is writing storage logic that works across providers:
+
+```java
+public class ReportProcessor {
+    private final CloudStorageClient storage;
+
+    public ReportProcessor(CloudStorageClient storage) {
+        this.storage = storage;
+    }
+
+    public void processReports(String folder) throws IOException {
+        for (String file : storage.list(folder)) {
+            if (file.endsWith(".csv")) {
+                byte[] data = storage.readFile(file);
+                // process the CSV data
+            }
+        }
+    }
+}
+
+// Works with any provider:
+new ReportProcessor(s3Client);
+new ReportProcessor(azureClient);
+new ReportProcessor(gcsClient);
+```
+
+## Requirements
+
+- Java 11 or later
+- Maven 3.x for building from source
+
+## Building
 
 ```bash
-git clone https://github.com/FlossWare/cloudstorage-java.git
-cd cloudstorage-java
-mvn clean install
+mvn clean verify
 ```
+
+This runs all tests and enforces code coverage thresholds (91% instruction, 90% branch, 91% line).
 
 ## License
 
-Apache License 2.0
+[GNU General Public License v3.0](LICENSE)
 
-## Related Projects
+## Contributing
 
-- [jclassloader](https://github.com/FlossWare/classloader-java) - Dynamic class loading using cloud-storage-client
+Issues and pull requests are welcome at [github.com/FlossWare/cloudstorage-java](https://github.com/FlossWare/cloudstorage-java/issues).

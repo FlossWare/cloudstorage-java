@@ -14,28 +14,21 @@
     <junit.version>6.1.0</junit.version>
     <message>Automated Version Bump ${project.version} [ci skip]</message>
   </properties>
+  <licenses>
+    <license>
+      <name>GNU General Public License, Version 3</name>
+      <url>http://www.gnu.org/licenses/gpl-3.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
   <scm>
     <connection>scm:git:https://github.com/FlossWare/cloudstorage-java.git</connection>
     <developerConnection>scm:git:https://github.com/FlossWare/cloudstorage-java.git</developerConnection>
     <url>https://github.com/FlossWare/cloudstorage-java</url>
-    <licenses>
-      <license>
-        <name>GNU General Public License, Version 3</name>
-        <url>http://www.gnu.org/licenses/gpl-3.0.txt</url>
-        <distribution>repo</distribution>
-      </license>
-    </licenses>
   </scm>
   <organization>
     <name>FlossWare</name>
     <url>https://github.com/FlossWare</url>
-    <licenses>
-      <license>
-        <name>GNU General Public License, Version 3</name>
-        <url>http://www.gnu.org/licenses/gpl-3.0.txt</url>
-        <distribution>repo</distribution>
-      </license>
-    </licenses>
   </organization>
   <developers>
     <developer>
@@ -49,26 +42,12 @@
   <issueManagement>
     <system>GitHub</system>
     <url>https://github.com/FlossWare/cloudstorage-java/issues</url>
-    <licenses>
-      <license>
-        <name>GNU General Public License, Version 3</name>
-        <url>http://www.gnu.org/licenses/gpl-3.0.txt</url>
-        <distribution>repo</distribution>
-      </license>
-    </licenses>
   </issueManagement>
   <distributionManagement>
     <repository>
       <id>packagecloud-flossware</id>
       <name>packagecloud-flossware</name>
       <url>https://packagecloud.io/flossware/java/maven2/</url>
-      <licenses>
-        <license>
-          <name>GNU General Public License, Version 3</name>
-          <url>http://www.gnu.org/licenses/gpl-3.0.txt</url>
-          <distribution>repo</distribution>
-        </license>
-      </licenses>
     </repository>
   </distributionManagement>
   <dependencies>
@@ -111,13 +90,6 @@
       <groupId>com.dropbox.core</groupId>
       <artifactId>dropbox-core-sdk</artifactId>
       <version>7.0.0</version>
-      <optional>true</optional>
-    </dependency>
-    <!-- Microsoft Graph (OneDrive) Support -->
-    <dependency>
-      <groupId>com.microsoft.graph</groupId>
-      <artifactId>microsoft-graph</artifactId>
-      <version>6.65.0</version>
       <optional>true</optional>
     </dependency>
     <!-- JUnit 5 for testing -->

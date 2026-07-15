@@ -16,9 +16,9 @@ import java.io.InputStream;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.Objects;
 
 /**
@@ -34,7 +34,7 @@ public class GoogleDriveCloudStorageClient implements CloudStorageClient {
     private GoogleDriveCloudStorageClient(Drive driveService, String folderId) {
         this.driveService = Objects.requireNonNull(driveService, "driveService cannot be null");
         this.folderId = folderId;
-        this.pathToFileIdCache = new HashMap<>();
+        this.pathToFileIdCache = new ConcurrentHashMap<>();
     }
 
     @Override
@@ -79,22 +79,29 @@ public class GoogleDriveCloudStorageClient implements CloudStorageClient {
             query += " and '" + folderId + "' in parents";
         }
 
-        FileList result = driveService.files().list()
-            .setQ(query)
-            .setSpaces("drive")
-            .setFields("files(id, name)")
-            .execute();
-
         List<String> files = new ArrayList<>();
-        if (result.getFiles() != null) {
-            for (File file : result.getFiles()) {
-                String name = file.getName();
-                if (prefix.isEmpty() || name.startsWith(prefix)) {
-                    files.add(name);
-                    pathToFileIdCache.put(name, file.getId());
+        String pageToken = null;
+
+        do {
+            FileList result = driveService.files().list()
+                .setQ(query)
+                .setSpaces("drive")
+                .setFields("nextPageToken, files(id, name)")
+                .setPageToken(pageToken)
+                .execute();
+
+            if (result.getFiles() != null) {
+                for (File file : result.getFiles()) {
+                    String name = file.getName();
+                    if (prefix.isEmpty() || name.startsWith(prefix)) {
+                        files.add(name);
+                        pathToFileIdCache.put(name, file.getId());
+                    }
                 }
             }
-        }
+
+            pageToken = result.getNextPageToken();
+        } while (pageToken != null);
 
         return files;
     }
@@ -130,7 +137,8 @@ public class GoogleDriveCloudStorageClient implements CloudStorageClient {
         }
 
         String fileName = path.substring(path.lastIndexOf('/') + 1);
-        String query = "name='" + fileName + "'";
+        String escapedName = fileName.replace("\\", "\\\\").replace("'", "\\'");
+        String query = "name='" + escapedName + "'";
 
         if (folderId != null) {
             query += " and '" + folderId + "' in parents";

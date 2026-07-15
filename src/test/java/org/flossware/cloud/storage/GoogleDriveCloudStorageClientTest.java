@@ -199,7 +199,9 @@ class GoogleDriveCloudStorageClientTest {
         when(list.setQ(anyString())).thenReturn(list);
         when(list.setSpaces(anyString())).thenReturn(list);
         when(list.setFields(anyString())).thenReturn(list);
+        when(list.setPageToken(any())).thenReturn(list);
         when(list.execute()).thenReturn(fileList);
+        when(fileList.getNextPageToken()).thenReturn(null);
         when(fileList.getFiles()).thenReturn(Arrays.asList(file1, file2));
 
         List<String> result = client.list("");
@@ -223,7 +225,9 @@ class GoogleDriveCloudStorageClientTest {
         when(list.setQ(anyString())).thenReturn(list);
         when(list.setSpaces(anyString())).thenReturn(list);
         when(list.setFields(anyString())).thenReturn(list);
+        when(list.setPageToken(any())).thenReturn(list);
         when(list.execute()).thenReturn(fileList);
+        when(fileList.getNextPageToken()).thenReturn(null);
         when(fileList.getFiles()).thenReturn(Arrays.asList(file1));
 
         List<String> result = client.list("");
@@ -249,7 +253,9 @@ class GoogleDriveCloudStorageClientTest {
         when(list.setQ(anyString())).thenReturn(list);
         when(list.setSpaces(anyString())).thenReturn(list);
         when(list.setFields(anyString())).thenReturn(list);
+        when(list.setPageToken(any())).thenReturn(list);
         when(list.execute()).thenReturn(fileList);
+        when(fileList.getNextPageToken()).thenReturn(null);
         when(fileList.getFiles()).thenReturn(Arrays.asList(file1, file2));
 
         List<String> result = client.list("test-");
@@ -269,7 +275,9 @@ class GoogleDriveCloudStorageClientTest {
         when(list.setQ(anyString())).thenReturn(list);
         when(list.setSpaces(anyString())).thenReturn(list);
         when(list.setFields(anyString())).thenReturn(list);
+        when(list.setPageToken(any())).thenReturn(list);
         when(list.execute()).thenReturn(fileList);
+        when(fileList.getNextPageToken()).thenReturn(null);
         when(fileList.getFiles()).thenReturn(null);
 
         List<String> result = client.list("");
@@ -386,7 +394,9 @@ class GoogleDriveCloudStorageClientTest {
         when(list.setQ(anyString())).thenReturn(list);
         when(list.setSpaces(anyString())).thenReturn(list);
         when(list.setFields(anyString())).thenReturn(list);
+        when(list.setPageToken(any())).thenReturn(list);
         when(list.execute()).thenReturn(fileList);
+        when(fileList.getNextPageToken()).thenReturn(null);
         when(fileList.getFiles()).thenReturn(Arrays.asList(foundFile));
 
         client.exists("path/to/file.txt");
@@ -596,7 +606,9 @@ class GoogleDriveCloudStorageClientTest {
         when(list.setQ(anyString())).thenReturn(list);
         when(list.setSpaces(anyString())).thenReturn(list);
         when(list.setFields(anyString())).thenReturn(list);
+        when(list.setPageToken(any())).thenReturn(list);
         when(list.execute()).thenReturn(fileList);
+        when(fileList.getNextPageToken()).thenReturn(null);
 
         if (fileId != null) {
             when(fileList.getFiles()).thenReturn(Arrays.asList(foundFile));

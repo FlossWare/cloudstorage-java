@@ -11,4 +11,5 @@ target/
 .project
 *.log
 logs/
+*.backup*
 .claude

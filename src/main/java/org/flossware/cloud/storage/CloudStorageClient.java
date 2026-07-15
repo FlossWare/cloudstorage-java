@@ -38,6 +38,9 @@ import java.util.List;
  * @see S3CloudStorageClient
  * @see AzureBlobCloudStorageClient
  * @see GcsCloudStorageClient
+ * @see GoogleDriveCloudStorageClient
+ * @see DropboxCloudStorageClient
+ * @see OneDriveCloudStorageClient
  */
 public interface CloudStorageClient extends AutoCloseable {
     /**

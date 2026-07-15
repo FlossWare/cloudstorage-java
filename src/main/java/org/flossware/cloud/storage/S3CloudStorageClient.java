@@ -18,9 +18,9 @@ import software.amazon.awssdk.services.s3.model.S3Object;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  * AWS S3 implementation of CloudStorageClient.
@@ -104,17 +104,29 @@ public class S3CloudStorageClient implements CloudStorageClient {
         String key = buildKey(prefix);
 
         try {
-            ListObjectsV2Request request = ListObjectsV2Request.builder()
-                .bucket(bucketName)
-                .prefix(key)
-                .build();
+            List<String> files = new ArrayList<>();
+            String continuationToken = null;
 
-            ListObjectsV2Response response = s3Client.listObjectsV2(request);
+            do {
+                ListObjectsV2Request.Builder requestBuilder = ListObjectsV2Request.builder()
+                    .bucket(bucketName)
+                    .prefix(key);
 
-            return response.contents().stream()
-                .map(S3Object::key)
-                .map(this::removePrefix)
-                .collect(Collectors.toList());
+                if (continuationToken != null) {
+                    requestBuilder.continuationToken(continuationToken);
+                }
+
+                ListObjectsV2Response response = s3Client.listObjectsV2(requestBuilder.build());
+
+                response.contents().stream()
+                    .map(S3Object::key)
+                    .map(this::removePrefix)
+                    .forEach(files::add);
+
+                continuationToken = response.isTruncated() ? response.nextContinuationToken() : null;
+            } while (continuationToken != null);
+
+            return files;
         } catch (Exception e) {
             throw new IOException("Failed to list files in S3: " + key, e);
         }
@@ -151,21 +163,11 @@ public class S3CloudStorageClient implements CloudStorageClient {
     }
 
     private String buildKey(String path) {
-        if (prefix.isEmpty()) {
-            return path;
-        }
-        return prefix + (prefix.endsWith("/") ? "" : "/") + path;
+        return PrefixUtils.buildPrefixedPath(prefix, path);
     }
 
     private String removePrefix(String key) {
-        if (prefix.isEmpty()) {
-            return key;
-        }
-        String prefixWithSlash = prefix.endsWith("/") ? prefix : prefix + "/";
-        if (key.startsWith(prefixWithSlash)) {
-            return key.substring(prefixWithSlash.length());
-        }
-        return key;
+        return PrefixUtils.removePrefix(prefix, key);
     }
 
     public static Builder builder() {
