@@ -7,7 +7,8 @@ org/flossware/cloud/storage/AzureBlobCloudStorageClient$Builder.class
 org/flossware/cloud/storage/GcsCloudStorageClient$Builder.class
 org/flossware/cloud/storage/DropboxCloudStorageClient.class
 org/flossware/cloud/storage/GoogleDriveCloudStorageClient$Builder.class
-org/flossware/cloud/storage/OneDriveCloudStorageClient$Builder.class
 org/flossware/cloud/storage/OneDriveCloudStorageClient.class
+org/flossware/cloud/storage/OneDriveCloudStorageClient$Builder.class
 org/flossware/cloud/storage/CloudStorageClient.class
 org/flossware/cloud/storage/GoogleDriveCloudStorageClient.class
+org/flossware/cloud/storage/PrefixUtils.class

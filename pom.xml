@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.flossware</groupId>
   <artifactId>cloudstorage-java</artifactId>
-  <version>1.0</version>
+  <version>1.1</version>
   <packaging>jar</packaging>
   <name>FlossWare Cloudstorage</name>
   <description>Universal cloud storage abstraction library supporting AWS S3, Azure Blob Storage, Google Cloud Storage, Google Drive, Dropbox, and OneDrive</description>
@@ -11,7 +11,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>11</maven.compiler.source>
     <maven.compiler.target>11</maven.compiler.target>
-    <junit.version>6.1.0</junit.version>
+    <junit.version>6.1.2</junit.version>
     <message>Automated Version Bump ${project.version} [ci skip]</message>
   </properties>
   <licenses>
