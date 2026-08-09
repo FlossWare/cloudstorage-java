@@ -3,20 +3,35 @@ name: Maven Quality Gate
 on:
   push:
     branches: [ main, develop ]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'LICENSE'
+      - '.gitignore'
   pull_request:
     branches: [ main, develop ]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'LICENSE'
+      - '.gitignore'
   schedule:
-    # Run daily at 2 AM UTC to catch dependency vulnerabilities
-    - cron: '0 2 * * *'
+    # Run weekly on Monday to catch dependency vulnerabilities
+    - cron: '35 2 * * 1'
 
 permissions:
   contents: read
   issues: write
   pull-requests: write
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   quality-check:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - name: Checkout code
